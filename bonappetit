@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bon Appetite</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #fff8f0;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background-color: #ff6f61;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        main {
+            padding: 20px;
+            max-width: 800px;
+            margin: auto;
+        }
+        input, select, button {
+            padding: 10px;
+            margin: 10px 0;
+            width: 100%;
+            font-size: 1em;
+        }
+        #recipeOutput {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            background-color: #fff3e6;
+        }
+        img {
+            max-width: 100%;
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Bon Appetite 🍴</h1>
+    <p>Generate delicious recipes based on your ingredients and taste!</p>
+</header>
+
+<main>
+    <label for="ingredients">Enter Ingredients (comma separated):</label>
+    <input type="text" id="ingredients" placeholder="e.g., chicken, garlic, rice">
+
+    <label for="recipeType">Select Recipe Type:</label>
+    <select id="recipeType">
+        <option value="Asian">Asian</option>
+        <option value="Indian">Indian</option>
+        <option value="American">American</option>
+        <option value="Mexican">Mexican</option>
+        <option value="Vietnamese">Vietnamese</option>
+    </select>
+
+    <button onclick="generateRecipe()">Generate Recipe</button>
+    <button onclick="downloadPDF()">Download Recipe as PDF</button>
+
+    <div id="recipeOutput"></div>
+</main>
+
+<script>
+    function generateRecipe() {
+        const ingredients = document.getElementById('ingredients').value.split(',').map(i => i.trim());
+        const type = document.getElementById('recipeType').value;
+
+        if (!ingredients.length || ingredients[0] === "") {
+            alert("Please enter at least one ingredient.");
+            return;
+        }
+
+        // Example improvisation logic
+        let recipeName = `${type} Delight with ${ingredients.join(', ')}`;
+        let cookingTime = `${30 + Math.floor(Math.random() * 30)} minutes`;
+        let nutrition = `Calories: ${200 + Math.floor(Math.random() * 300)} kcal, Protein: ${10 + Math.floor(Math.random() * 20)} g, Fat: ${5 + Math.floor(Math.random() * 15)} g`;
+        let recipeSteps = `1. Prepare all ingredients.\n2. Cook according to ${type} style.\n3. Mix ingredients well and season to taste.\n4. Serve hot and enjoy!`;
+        let imageUrl = `https://source.unsplash.com/600x400/?${type.toLowerCase()},food`;
+
+        const output = `
+            <h2>${recipeName}</h2>
+            <p><strong>Cooking Time:</strong> ${cookingTime}</p>
+            <p><strong>Nutritional Info:</strong> ${nutrition}</p>
+            <p><strong>Recipe Steps:</strong><br>${recipeSteps.replace(/\n/g, '<br>')}</p>
+            <img src="${imageUrl}" alt="${recipeName}">
+        `;
+
+        document.getElementById('recipeOutput').innerHTML = output;
+    }
+
+    function downloadPDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        const content = document.getElementById('recipeOutput').innerText;
+        if (!content) {
+            alert("Generate a recipe first!");
+            return;
+        }
+        doc.text(content, 10, 10);
+        doc.save('recipe.pdf');
+    }
+</script>
+
+</body>
+</html>
