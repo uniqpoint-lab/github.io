@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Image Renamer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 900px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            text-align: center;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .input-section {
+            margin-bottom: 30px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            color: #333;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        input[type="file"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px dashed #667eea;
+            border-radius: 10px;
+            background: #f8f9ff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        input[type="file"]:hover {
+            border-color: #764ba2;
+            background: #f0f1ff;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            margin-top: 20px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .progress {
+            margin-top: 20px;
+            display: none;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .results {
+            margin-top: 30px;
+            display: none;
+        }
+
+        .result-item {
+            background: #f8f9ff;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .result-item strong {
+            color: #667eea;
+        }
+
+        .error {
+            background: #ffe0e0;
+            border-left-color: #ff4444;
+        }
+
+        .success {
+            background: #e0ffe0;
+            border-left-color: #44ff44;
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 600;
+            display: none;
+        }
+
+        .info-box {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .info-box h3 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .info-box ul {
+            margin-left: 20px;
+            color: #856404;
+        }
+
+        .info-box li {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🖼️ AI Image Renamer</h1>
+        <p class="subtitle">Intelligently rename images based on their content</p>
+
+        <div class="info-box">
+            <h3>ℹ️ How it works:</h3>
+            <ul>
+                <li>Select multiple images from your directory</li>
+                <li>AI analyzes each image and suggests descriptive names</li>
+                <li>Filenames are limited to 10 characters (+ extension)</li>
+                <li>Duplicate names get numbered sequences (e.g., cat_1.jpg, cat_2.jpg)</li>
+                <li>Download renamed images as a ZIP file</li>
+            </ul>
+        </div>
+
+        <div class="input-section">
+            <label for="imageInput">Select Images:</label>
+            <input type="file" id="imageInput" multiple accept="image/*">
+        </div>
+
+        <button id="processBtn" onclick="processImages()">🚀 Analyze & Rename Images</button>
+
+        <div class="progress" id="progress">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill">0%</div>
+            </div>
+        </div>
+
+        <div class="status" id="status"></div>
+
+        <div class="results" id="results"></div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script>
+        // Store renamed files for download
+        let renamedFiles = [];
+        let usedNames = new Set();
+
+        /**
+         * Analyzes an image using Claude AI vision API
+         * @param {File} file - The image file to analyze
+         * @returns {Promise<string>} - Suggested filename without extension
+         */
+        async function analyzeImage(file) {
+            try {
+                // Convert image to base64
+                const base64 = await fileToBase64(file);
+                const mediaType = file.type;
+
+                // Call Claude API with vision
+                const response = await fetch("https://api.anthropic.com/v1/messages", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        model: "claude-sonnet-4-20250514",
+                        max_tokens: 1000,
+                        messages: [
+                            {
+                                role: "user",
+                                content: [
+                                    {
+                                        type: "image",
+                                        source: {
+                                            type: "base64",
+                                            media_type: mediaType,
+                                            data: base64
+                                        }
+                                    },
+                                    {
+                                        type: "text",
+                                        text: "Analyze this image and suggest a descriptive filename (WITHOUT extension) that captures its main content. The filename must be EXACTLY 10 characters or less, use only lowercase letters, numbers, and underscores. Be concise and descriptive. Respond with ONLY the filename, nothing else."
+                                    }
+                                ]
+                            }
+                        ]
+                    })
+                });
+
+                const data = await response.json();
+                let suggestedName = data.content[0].text.trim().toLowerCase();
+                
+                // Clean and validate filename
+                suggestedName = suggestedName.replace(/[^a-z0-9_]/g, '_');
+                suggestedName = suggestedName.substring(0, 10);
+                
+                return suggestedName || 'image';
+            } catch (error) {
+                console.error('Error analyzing image:', error);
+                return 'image';
+            }
+        }
+
+        /**
+         * Converts a file to base64 string
+         * @param {File} file - File to convert
+         * @returns {Promise<string>} - Base64 encoded string
+         */
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result.split(',')[1]);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        /**
+         * Generates a unique filename by adding number sequences if needed
+         * @param {string} baseName - Base filename without extension
+         * @param {string} ext - File extension
+         * @returns {string} - Unique filename with extension
+         */
+        function getUniqueFilename(baseName, ext) {
+            let finalName = baseName + ext;
+            
+            // If name is unique, use it
+            if (!usedNames.has(finalName)) {
+                usedNames.add(finalName);
+                return finalName;
+            }
+            
+            // Add number sequence
+            let counter = 1;
+            let maxBaseLength = 10 - ext.length - String(counter).length - 1; // -1 for underscore
+            let truncatedBase = baseName.substring(0, maxBaseLength);
+            
+            while (true) {
+                finalName = `${truncatedBase}_${counter}${ext}`;
+                if (!usedNames.has(finalName)) {
+                    usedNames.add(finalName);
+                    return finalName;
+                }
+                counter++;
+                
+                // Recalculate max base length as counter grows
+                maxBaseLength = 10 - ext.length - String(counter).length - 1;
+                truncatedBase = baseName.substring(0, maxBaseLength);
+            }
+        }
+
+        /**
+         * Main function to process all selected images
+         */
+        async function processImages() {
+            const input = document.getElementById('imageInput');
+            const files = input.files;
+            
+            if (!files || files.length === 0) {
+                showStatus('Please select at least one image file', 'error');
+                return;
+            }
+
+            // Reset
+            renamedFiles = [];
+            usedNames = new Set();
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '';
+            resultsDiv.style.display = 'none';
+            
+            // Show progress
+            const progressDiv = document.getElementById('progress');
+            const progressFill = document.getElementById('progressFill');
+            progressDiv.style.display = 'block';
+            
+            const processBtn = document.getElementById('processBtn');
+            processBtn.disabled = true;
+            
+            showStatus('Processing images...', 'info');
+
+            // Process each image
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const progress = Math.round(((i + 1) / files.length) * 100);
+                progressFill.style.width = progress + '%';
+                progressFill.textContent = progress + '%';
+                
+                try {
+                    // Get original extension
+                    const originalName = file.name;
+                    const ext = '.' + originalName.split('.').pop().toLowerCase();
+                    
+                    // Analyze image with AI
+                    const suggestedName = await analyzeImage(file);
+                    
+                    // Get unique filename
+                    const newFilename = getUniqueFilename(suggestedName, ext);
+                    
+                    // Store renamed file
+                    renamedFiles.push({
+                        originalFile: file,
+                        originalName: originalName,
+                        newName: newFilename
+                    });
+                    
+                    // Display result
+                    addResult(originalName, newFilename, 'success');
+                } catch (error) {
+                    console.error('Error processing:', file.name, error);
+                    addResult(file.name, 'Error: ' + error.message, 'error');
+                }
+            }
+            
+            processBtn.disabled = false;
+            showStatus(`✅ Processed ${files.length} images successfully!`, 'success');
+            
+            // Add download button
+            resultsDiv.innerHTML += '<button onclick="downloadZip()" style="margin-top: 20px;">📥 Download Renamed Images (ZIP)</button>';
+        }
+
+        /**
+         * Adds a result item to the results display
+         * @param {string} oldName - Original filename
+         * @param {string} newName - New filename
+         * @param {string} type - 'success' or 'error'
+         */
+        function addResult(oldName, newName, type) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.style.display = 'block';
+            
+            const resultItem = document.createElement('div');
+            resultItem.className = `result-item ${type}`;
+            resultItem.innerHTML = `
+                <strong>${oldName}</strong> → ${newName}
+            `;
+            resultsDiv.appendChild(resultItem);
+        }
+
+        /**
+         * Shows status message
+         * @param {string} message - Status message
+         * @param {string} type - 'info', 'success', or 'error'
+         */
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = 'status';
+            statusDiv.style.display = 'block';
+            
+            if (type === 'success') {
+                statusDiv.style.background = '#d4edda';
+                statusDiv.style.color = '#155724';
+            } else if (type === 'error') {
+                statusDiv.style.background = '#f8d7da';
+                statusDiv.style.color = '#721c24';
+            } else {
+                statusDiv.style.background = '#d1ecf1';
+                statusDiv.style.color = '#0c5460';
+            }
+        }
+
+        /**
+         * Creates and downloads a ZIP file with renamed images
+         */
+        async function downloadZip() {
+            showStatus('Creating ZIP file...', 'info');
+            
+            const zip = new JSZip();
+            
+            // Add each renamed file to ZIP
+            for (const item of renamedFiles) {
+                const blob = await item.originalFile.arrayBuffer();
+                zip.file(item.newName, blob);
+            }
+            
+            // Generate and download ZIP
+            const content = await zip.generateAsync({ type: 'blob' });
+            const url = URL.createObjectURL(content);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'renamed_images.zip';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showStatus('✅ ZIP file downloaded!', 'success');
+        }
+    </script>
+</body>
+</html>
